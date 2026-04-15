@@ -1,109 +1,146 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Snake Game</title>
+  <title>Smooth Snake</title>
   <style>
     body {
+      margin: 0;
       background: #111;
-      color: white;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       font-family: Arial;
+      color: white;
     }
+
+    h1 { margin: 10px; }
 
     canvas {
-      background: #222;
-      border: 3px solid lime;
-      margin-top: 10px;
+      border: 3px solid #2ecc71;
+      background: #2d6a2d;
     }
 
-    h1 {
-      margin-bottom: 5px;
+    .score {
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
 
-<h1>🐍 Snake Game</h1>
-<p>Score: <span id="score">0</span></p>
-<canvas id="game" width="500" height="500"></canvas>
+<h1>🐍 Smooth Snake</h1>
+<div class="score">Score: <span id="score">0</span></div>
+<canvas id="game" width="600" height="600"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const box = 25;
-let snake = [{x: 250, y: 250}];
-let direction = "RIGHT";
+const size = 600;
+
+let snake = [
+  {x: 300, y: 300}
+];
+
+let velocity = {x: 4, y: 0};
 let score = 0;
 
-let food = spawnFood();
+let apple = spawnApple();
 
-document.addEventListener("keydown", changeDirection);
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp" && velocity.y === 0) {
+    velocity = {x: 0, y: -4};
+  }
+  if (e.key === "ArrowDown" && velocity.y === 0) {
+    velocity = {x: 0, y: 4};
+  }
+  if (e.key === "ArrowLeft" && velocity.x === 0) {
+    velocity = {x: -4, y: 0};
+  }
+  if (e.key === "ArrowRight" && velocity.x === 0) {
+    velocity = {x: 4, y: 0};
+  }
+});
 
-function changeDirection(e){
-  if(e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
-  if(e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
-  if(e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
-  if(e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
-}
-
-function spawnFood(){
+function spawnApple(){
   return {
-    x: Math.floor(Math.random()*20)*box,
-    y: Math.floor(Math.random()*20)*box
+    x: Math.random() * (size - 20),
+    y: Math.random() * (size - 20)
   };
 }
 
-function draw(){
-  ctx.fillStyle = "#222";
-  ctx.fillRect(0,0,500,500);
+function drawGrass(){
+  ctx.fillStyle = "#2d6a2d";
+  ctx.fillRect(0,0,size,size);
 
-  // snake
-  snake.forEach((part, i) => {
-    ctx.fillStyle = i === 0 ? "lime" : "green";
-    ctx.fillRect(part.x, part.y, box, box);
-  });
+  // simple grass texture
+  for (let i = 0; i < 100; i++) {
+    ctx.fillStyle = "rgba(0,0,0,0.05)";
+    ctx.fillRect(Math.random()*size, Math.random()*size, 2, 10);
+  }
+}
 
-  // food
+function drawApple(a){
   ctx.fillStyle = "red";
-  ctx.fillRect(food.x, food.y, box, box);
+  ctx.beginPath();
+  ctx.arc(a.x, a.y, 10, 0, Math.PI * 2);
+  ctx.fill();
 
-  let headX = snake[0].x;
-  let headY = snake[0].y;
+  // leaf
+  ctx.fillStyle = "green";
+  ctx.fillRect(a.x + 3, a.y - 15, 4, 8);
+}
 
-  if(direction === "LEFT") headX -= box;
-  if(direction === "UP") headY -= box;
-  if(direction === "RIGHT") headX += box;
-  if(direction === "DOWN") headY += box;
+function drawSnake(){
+  for (let i = 0; i < snake.length; i++) {
+    const s = snake[i];
 
-  // eat food
-  if(headX === food.x && headY === food.y){
+    ctx.fillStyle = i === 0 ? "#00ff88" : "#00aa55";
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 10, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function update(){
+  const head = {
+    x: snake[0].x + velocity.x,
+    y: snake[0].y + velocity.y
+  };
+
+  snake.unshift(head);
+
+  // eat apple
+  const dx = head.x - apple.x;
+  const dy = head.y - apple.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+
+  if (dist < 15) {
     score++;
     document.getElementById("score").innerText = score;
-    food = spawnFood();
+    apple = spawnApple();
   } else {
     snake.pop();
   }
 
-  const newHead = {x: headX, y: headY};
-
-  // collision
-  if(
-    headX < 0 || headY < 0 ||
-    headX >= 500 || headY >= 500 ||
-    snake.some(p => p.x === headX && p.y === headY)
-  ){
-    clearInterval(game);
-    setTimeout(() => {
-      alert("Game Over! Score: " + score);
-      location.reload();
-    }, 100);
+  // walls
+  if (
+    head.x < 0 || head.x > size ||
+    head.y < 0 || head.y > size
+  ) {
+    alert("Game Over! Score: " + score);
+    location.reload();
   }
-
-  snake.unshift(newHead);
 }
 
-const game = setInterval(draw, 90);
+function loop(){
+  drawGrass();
+  drawApple(apple);
+  drawSnake();
+  update();
+  requestAnimationFrame(loop);
+}
+
+loop();
 </script>
 
 </body>
