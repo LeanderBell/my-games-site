@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Snake Game</title>
+  <title>Arcade Snake</title>
   <style>
     body {
       margin: 0;
-      background: #111;
+      background: #0f0f0f;
       font-family: Arial;
       color: white;
       text-align: center;
     }
 
     canvas {
-      background: #1f7a1f;
       display: block;
-      margin: 0 auto;
+      margin: auto;
+      background: radial-gradient(#1f7a1f, #0b3d0b);
       border: 4px solid #2ecc71;
     }
 
@@ -27,161 +27,144 @@
     }
 
     button {
-      padding: 10px 15px;
+      padding: 8px 14px;
       margin: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
       border-radius: 8px;
-    }
-
-    #menu {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #menu h1 {
-      font-size: 40px;
-      margin-bottom: 20px;
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
 <div class="ui">
-  Score: <span id="score">0</span> |
-  High Score: <span id="highScore">0</span>
-  <br>
-  <button onclick="restartGame()">Restart</button>
+  Score: <span id="score">0</span>
+  <button onclick="restart()">Restart</button>
 </div>
 
-<div id="menu">
-  <h1>🐍 Snake Game</h1>
-  <button onclick="startGame()">Start</button>
-</div>
-
-<canvas id="game" width="600" height="600"></canvas>
+<canvas id="game" width="700" height="500"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const size = 600;
-const box = 20;
+const W = canvas.width;
+const H = canvas.height;
 
-let snake, direction, food, score, gameRunning;
+let snake = [];
+let length = 40;
 
-let highScore = localStorage.getItem("highScore") || 0;
-document.getElementById("highScore").innerText = highScore;
+let mouse = {x: W/2, y: H/2};
+let speed = 3;
 
-function startGame(){
-  document.getElementById("menu").style.display = "none";
+let dir = {x: 1, y: 0};
 
-  snake = [{x: 300, y: 300}]; // center start
-  direction = "RIGHT";
-  score = 0;
-  gameRunning = true;
+let apple = spawnApple();
+let score = 0;
 
-  food = spawnFood();
-
-  document.getElementById("score").innerText = score;
-
-  document.addEventListener("keydown", changeDir);
+for(let i=0;i<length;i++){
+  snake.push({x: W/2 - i*5, y: H/2});
 }
 
-function restartGame(){
-  location.reload();
-}
+document.addEventListener("keydown", e => {
+  if(e.key === "ArrowUp") dir = {x:0,y:-1};
+  if(e.key === "ArrowDown") dir = {x:0,y:1};
+  if(e.key === "ArrowLeft") dir = {x:-1,y:0};
+  if(e.key === "ArrowRight") dir = {x:1,y:0};
+});
 
-function changeDir(e){
-  if(!gameRunning) return;
-
-  if(e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
-  if(e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
-  if(e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
-  if(e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
-}
-
-function spawnFood(){
+function spawnApple(){
   return {
-    x: Math.floor(Math.random() * (size/box)) * box,
-    y: Math.floor(Math.random() * (size/box)) * box
+    x: Math.random()*W,
+    y: Math.random()*H
   };
 }
 
-function draw(){
-  if(!gameRunning) return;
+function update(){
+  let head = snake[0];
 
-  ctx.fillStyle = "#1f7a1f";
-  ctx.fillRect(0,0,size,size);
+  let newHead = {
+    x: head.x + dir.x * speed,
+    y: head.y + dir.y * speed
+  };
 
-  // food (apple)
-  ctx.fillStyle = "red";
-  ctx.beginPath();
-  ctx.arc(food.x + 10, food.y + 10, 10, 0, Math.PI * 2);
-  ctx.fill();
+  snake.unshift(newHead);
+  snake.pop();
 
-  // snake
-  snake.forEach((s, i) => {
-    ctx.fillStyle = i === 0 ? "#00ff99" : "#00aa66";
-    ctx.beginPath();
-    ctx.arc(s.x + 10, s.y + 10, 10, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  // eat apple
+  let dx = newHead.x - apple.x;
+  let dy = newHead.y - apple.y;
+  let dist = Math.sqrt(dx*dx + dy*dy);
 
-  let head = {x: snake[0].x, y: snake[0].y};
-
-  if(direction === "LEFT") head.x -= box;
-  if(direction === "RIGHT") head.x += box;
-  if(direction === "UP") head.y -= box;
-  if(direction === "DOWN") head.y += box;
-
-  // eat food
-  if(head.x === food.x && head.y === food.y){
+  if(dist < 15){
     score++;
     document.getElementById("score").innerText = score;
-    food = spawnFood();
-  } else {
-    snake.pop();
+    apple = spawnApple();
+
+    // grow
+    for(let i=0;i<8;i++){
+      snake.push({...snake[snake.length-1]});
+    }
   }
 
-  // collision
-  if(
-    head.x < 0 || head.y < 0 ||
-    head.x >= size || head.y >= size ||
-    snake.some(s => s.x === head.x && s.y === head.y)
-  ){
-    gameOver();
-    return;
-  }
-
-  snake.unshift(head);
+  // walls wrap
+  if(newHead.x < 0) newHead.x = W;
+  if(newHead.x > W) newHead.x = 0;
+  if(newHead.y < 0) newHead.y = H;
+  if(newHead.y > H) newHead.y = 0;
 }
 
-function gameOver(){
-  gameRunning = false;
+function drawBackground(){
+  ctx.fillStyle = "#0b3d0b";
+  ctx.fillRect(0,0,W,H);
 
-  if(score > highScore){
-    highScore = score;
-    localStorage.setItem("highScore", highScore);
+  // subtle grid glow
+  for(let i=0;i<20;i++){
+    ctx.strokeStyle = "rgba(0,255,0,0.03)";
+    ctx.beginPath();
+    ctx.moveTo(i*40,0);
+    ctx.lineTo(i*40,H);
+    ctx.stroke();
   }
-
-  document.getElementById("highScore").innerText = highScore;
-
-  setTimeout(() => {
-    alert("Game Over! Score: " + score);
-  }, 100);
 }
 
-setInterval(draw, 100);
+function drawApple(){
+  let gradient = ctx.createRadialGradient(apple.x, apple.y, 2, apple.x, apple.y, 12);
+  gradient.addColorStop(0, "white");
+  gradient.addColorStop(0.3, "red");
+  gradient.addColorStop(1, "#7a0000");
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(apple.x, apple.y, 10, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawSnake(){
+  for(let i=0;i<snake.length;i++){
+    let p = snake[i];
+
+    let t = i / snake.length;
+
+    ctx.fillStyle = `rgb(${0}, ${200 - t*100}, ${120 - t*80})`;
+
+    ctx.fillRect(p.x, p.y, 8, 8);
+  }
+}
+
+function loop(){
+  update();
+  drawBackground();
+  drawApple();
+  drawSnake();
+  requestAnimationFrame(loop);
+}
+
+function restart(){
+  location.reload();
+}
+
+loop();
 </script>
 
 </body>
