@@ -6,59 +6,90 @@
     body {
       margin: 0;
       font-family: Arial;
-      background: radial-gradient(circle at top, #1b1b1b, #0a0a0a);
+      background: radial-gradient(circle at top, #111, #000);
       color: white;
       text-align: center;
     }
 
     header {
-      padding: 30px;
+      padding: 40px 20px 10px;
     }
 
     h1 {
-      font-size: 40px;
+      font-size: 48px;
       margin: 0;
+      letter-spacing: 2px;
     }
 
     p {
       color: #aaa;
+      margin-top: 10px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      padding: 40px;
-      max-width: 800px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+      padding: 50px;
+      max-width: 900px;
       margin: auto;
     }
 
     .card {
-      background: #1f1f1f;
+      background: #141414;
       border: 2px solid #2ecc71;
-      border-radius: 15px;
-      padding: 20px;
-      cursor: pointer;
-      transition: 0.2s ease;
+      border-radius: 16px;
+      padding: 25px;
       text-decoration: none;
       color: white;
-      display: block;
+      transition: 0.25s ease;
+      position: relative;
+      overflow: hidden;
     }
 
     .card:hover {
-      transform: scale(1.05);
-      background: #2a2a2a;
-      box-shadow: 0 0 20px #2ecc71;
+      transform: scale(1.08);
+      box-shadow: 0 0 25px #2ecc71;
+      border-color: #00ff99;
     }
 
-    .emoji {
-      font-size: 40px;
+    .icon {
+      font-size: 50px;
       margin-bottom: 10px;
     }
 
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .desc {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    /* animated glow effect */
+    .card::before {
+      content: "";
+      position: absolute;
+      width: 150%;
+      height: 150%;
+      background: radial-gradient(circle, rgba(46,204,113,0.2), transparent);
+      top: -25%;
+      left: -25%;
+      transform: rotate(25deg);
+      transition: 0.5s;
+    }
+
+    .card:hover::before {
+      transform: rotate(0deg);
+      opacity: 1;
+    }
+
     footer {
-      margin-top: 40px;
-      color: #666;
+      margin-top: 20px;
+      color: #555;
       font-size: 12px;
       padding-bottom: 20px;
     }
@@ -67,22 +98,28 @@
 <body>
 
 <header>
-  <h1>🎮 Arcade Hub</h1>
-  <p>Play simple games built in the browser</p>
+  <h1>🎮 ARCADE HUB</h1>
+  <p>Choose a game and play instantly</p>
 </header>
 
 <div class="grid">
 
   <a class="card" href="snake.html">
-    <div class="emoji">🐍</div>
-    <h3>Snake</h3>
-    <p>Classic arcade snake game</p>
+    <div class="icon">🐍</div>
+    <div class="title">Snake</div>
+    <div class="desc">Smooth arcade snake with score system</div>
+  </a>
+
+  <a class="card" href="wave.html">
+    <div class="icon">⚡</div>
+    <div class="title">Wave Mode</div>
+    <div class="desc">Geometry Dash style wave runner</div>
   </a>
 
 </div>
 
 <footer>
-  Built with GitHub Pages 🚀
+  Built with GitHub Pages • Arcade Project 🚀
 </footer>
 
 </body>
