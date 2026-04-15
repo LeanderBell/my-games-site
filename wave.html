@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wave Mode</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      font-family: Arial;
+      color: white;
+    }
+
+    canvas {
+      display: block;
+      margin: auto;
+      background: #000;
+    }
+
+    .ui {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="ui">
+  Score: <span id="score">0</span>
+</div>
+
+<canvas id="game" width="800" height="500"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+let waveY = H / 2;
+let velocity = 0;
+
+let gravity = 0.4;
+let lift = -7;
+
+let score = 0;
+let frames = 0;
+
+// obstacles (top + bottom walls)
+let walls = [];
+
+document.addEventListener("keydown", () => {
+  velocity = lift;
+});
+
+function spawnWall(){
+  let gap = 160;
+  let top = Math.random() * (H - gap - 100) + 50;
+
+  walls.push({
+    x: W,
+    top: top,
+    bottom: top + gap
+  });
+}
+
+function update(){
+  velocity += gravity;
+  waveY += velocity;
+
+  if(frames % 90 === 0){
+    spawnWall();
+  }
+
+  for(let w of walls){
+    w.x -= 4;
+
+    // collision
+    if(w.x < 120 && w.x > 60){
+      if(waveY < w.top || waveY > w.bottom){
+        alert("Game Over! Score: " + score);
+        location.reload();
+      }
+    }
+  }
+
+  walls = walls.filter(w => w.x > -50);
+
+  score++;
+  document.getElementById("score").innerText = score;
+  frames++;
+}
+
+function draw(){
+  ctx.fillStyle = "black";
+  ctx.fillRect(0,0,W,H);
+
+  // neon wave trail
+  ctx.fillStyle = "cyan";
+  ctx.fillRect(100, waveY, 10, 10);
+
+  // draw walls
+  for(let w of walls){
+    ctx.fillStyle = "#ff00ff";
+
+    ctx.fillRect(w.x, 0, 50, w.top);
+    ctx.fillRect(w.x, w.bottom, 50, H);
+  }
+
+  // glow effect line
+  ctx.strokeStyle = "rgba(0,255,255,0.2)";
+  ctx.beginPath();
+  ctx.moveTo(100, waveY);
+  ctx.lineTo(110, waveY);
+  ctx.stroke();
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
